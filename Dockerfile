@@ -13,8 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY api.py .
 
-# Expose the port (Render will set PORT environment variable)
+# Expose the port (Render assigns PORT dynamically)
 EXPOSE 8000
 
 # Command to run the application
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "$PORT"]
+CMD ["python", "api.py"]
