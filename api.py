@@ -13,7 +13,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Enable CORS to allow requests from any origin (useful for frontend clients)
+# Enable CORS to allow requests from any origin
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -96,4 +96,5 @@ async def get_matches_by_day(day: str):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
+    port = int(os.getenv("PORT", 8000))  # Default to 8000 if PORT is not set
+    uvicorn.run(app, host="0.0.0.0", port=port)
