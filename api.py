@@ -6,6 +6,15 @@ from bs4 import BeautifulSoup
 import re
 from typing import List
 import os
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+import logging
+from datetime import datetime
+import pytz
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Football Match Schedule API",
@@ -73,13 +82,56 @@ def scrape_matches(url: str) -> List[Match]:
         return [Match(**match) for match in matches]
     
     except requests.RequestException as e:
+        logger.error(f"Error fetching data: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error fetching data: {str(e)}")
+
+async def scheduled_scrape():
+    global matches_data
+    url = os.getenv("SCRAPE_URL", "https://mantosdofutebol.com.br/guia-de-jogos-tv-hoje-ao-vivo/")
+    try:
+        matches_data = scrape_matches(url)
+        logger.info("Scheduled scrape completed successfully")
+    except Exception as e:
+        logger.error(f"Scheduled scrape failed: {str(e)}")
+
+async def log_time_until_next_scrape(scheduler):
+    try:
+        job = scheduler.get_job('daily_scrape')
+        if job and job.next_run_time:
+            next_run = job.next_run_time
+            now = datetime.now(pytz.timezone("America/Sao_Paulo"))
+            time_diff = next_run - now
+            hours, remainder = divmod(time_diff.total_seconds(), 3600)
+            minutes, seconds = divmod(remainder, 60)
+            logger.info(f"Time until next scrape (1 AM): {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds")
+        else:
+            logger.warning("No scheduled scrape job found")
+    except Exception as e:
+        logger.error(f"Error calculating time until next scrape: {str(e)}")
 
 @app.on_event("startup")
 async def startup_event():
     global matches_data
     url = os.getenv("SCRAPE_URL", "https://mantosdofutebol.com.br/guia-de-jogos-tv-hoje-ao-vivo/")
-    matches_data = scrape_matches(url)
+    matches_data = scrape_matches(url)  # Initial scrape on startup
+    
+    # Initialize scheduler
+    scheduler = AsyncIOScheduler(timezone="America/Sao_Paulo")
+    scheduler.add_job(
+        scheduled_scrape,
+        trigger=CronTrigger(hour=1, minute=0),  # Run daily at 1 AM
+        id='daily_scrape',
+        replace_existing=True
+    )
+    scheduler.add_job(
+        log_time_until_next_scrape,
+        trigger=CronTrigger(minute=0),  # Run every hour
+        args=[scheduler],
+        id='log_time',
+        replace_existing=True
+    )
+    scheduler.start()
+    logger.info("Scheduler started for daily scrape at 1 AM and hourly time logging")
 
 @app.get("/matches", response_model=List[Match], summary="Get all matches", description="Retrieve all football matches and their broadcast channels.")
 async def get_all_matches():
