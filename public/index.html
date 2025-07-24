@@ -1,23 +1,30 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <title>FFmpeg Restream Robust - Suporta .m3u8 e .ts</title>
+  <meta charset="UTF-8">
+  <title>FFPag Restream</title>
 </head>
-<body>
-  <h1>Reestream com FFmpeg (robusto)</h1>
-  <form method="POST" action="/restream">
-    <label for="inputUrl">Informe o link do canal (.m3u8 ou .ts):</label><br />
-    <input
-      type="url"
-      id="inputUrl"
-      name="inputUrl"
-      placeholder="https://exemplo.com/canal.m3u8 ou canal.ts"
-      required
-      style="width: 400px;"
-    />
-    <br /><br />
-    <button type="submit">Iniciar Restream</button>
-  </form>
+<body style="font-family: Arial; padding: 30px; max-width: 600px">
+  <h1>FFPag Restream</h1>
+  <p>Insira o link .m3u8 ou .ts:</p>
+  <input type="text" id="link" style="width: 100%; padding: 10px" placeholder="https://exemplo.com/stream.m3u8">
+  <button onclick="startRestream()" style="margin-top: 10px; padding: 10px 20px">Iniciar</button>
+  <p id="resultado" style="margin-top: 20px;"></p>
+
+  <script>
+    async function startRestream() {
+      const link = document.getElementById('link').value;
+      const res = await fetch('/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: link })
+      });
+      const data = await res.json();
+      document.getElementById('resultado').innerHTML = `
+        <strong>${data.message}</strong><br>
+        <a href="${data.url}" target="_blank">${data.url}</a>
+      `;
+    }
+  </script>
 </body>
 </html>
