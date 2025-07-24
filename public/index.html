@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>FFmpeg Restream Robust - Suporta .m3u8 e .ts</title>
+</head>
+<body>
+  <h1>Reestream com FFmpeg (robusto)</h1>
+  <form method="POST" action="/restream">
+    <label for="inputUrl">Informe o link do canal (.m3u8 ou .ts):</label><br />
+    <input
+      type="url"
+      id="inputUrl"
+      name="inputUrl"
+      placeholder="https://exemplo.com/canal.m3u8 ou canal.ts"
+      required
+      style="width: 400px;"
+    />
+    <br /><br />
+    <button type="submit">Iniciar Restream</button>
+  </form>
+</body>
+</html>
