@@ -1,15 +1,20 @@
-FROM node:18-bullseye
+# Use official Python slim image for a smaller footprint
+FROM python:3.11-slim
 
-# Instalar ffmpeg
-RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
-
+# Set working directory
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
+# Copy requirements file
+COPY requirements.txt .
 
-COPY . .
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 3000
+# Copy application code
+COPY api.py .
 
-CMD ["npm", "start"]
+# Expose the port (Render will set PORT environment variable)
+EXPOSE 8000
+
+# Command to run the application
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "$PORT"]
